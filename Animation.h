@@ -23,4 +23,8 @@ public:
 			current_frame = 0.0f;
 		return frames[(int)current_frame];
 	}
+
+	int getPosCurrentFrame() {
+		return (int)current_frame;
+	}
 };

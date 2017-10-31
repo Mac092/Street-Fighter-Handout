@@ -15,9 +15,9 @@ ModuleSceneKen::ModuleSceneKen(bool start_enabled) : Module(start_enabled)
 {
 	// ground
 	ground.x = 8;
-	ground.y = 391;
+	ground.y = 410;
 	ground.w = 896;
-	ground.h = 72;
+	ground.h = 100;
 
 	// TODO 2 : setup the foreground (red ship) with
 	// coordinates x,y,w,h from ken_stage.png
@@ -101,7 +101,18 @@ update_status ModuleSceneKen::Update()
 		shipYMovement *= -1;
 	}
 	frameCounter++;
-		
+	
+	// TODO 11: Make that pressing space triggers a switch to honda logic module
+	// using FadeToBlack module
+	if (App->input->GetKey(SDL_SCANCODE_0) == KEY_DOWN) {
+		CleanUp();
+		App->fade->Start();
+		App->fade->FadeToBlack((Module*)App->scene_honda, this, 0.95f);
+		App->fade->Update();
+		App->player->Start();
+		return UPDATE_CONTINUE;
+
+	}
 
 	// Draw everything --------------------------------------
 	// TODO 1: Tweak the movement speed of the sea&sky + flag to your taste
@@ -118,8 +129,7 @@ update_status ModuleSceneKen::Update()
 	// TODO 10: Build an entire new scene "honda", you can find its
 	// and music in the Game/ folder
 
-	// TODO 11: Make that pressing space triggers a switch to honda logic module
-	// using FadeToBlack module
+	
 	App->player->Update();
 	return UPDATE_CONTINUE;
 }

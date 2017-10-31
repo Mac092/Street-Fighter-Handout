@@ -3,6 +3,7 @@
 #include "ModuleRender.h"
 #include "ModuleWindow.h"
 #include "ModuleInput.h"
+#include "ModulePlayer.h"
 #include "SDL/include/SDL.h"
 
 ModuleRender::ModuleRender()
@@ -53,17 +54,21 @@ update_status ModuleRender::Update()
 	int speed = 1;
 
 	if(App->input->GetKey(SDL_SCANCODE_UP) == KEY_REPEAT)
+		if(camera.y<=-1)
 		App->renderer->camera.y += speed;
 
 	if(App->input->GetKey(SDL_SCANCODE_DOWN) == KEY_REPEAT)
+		if(camera.y>=1)
 		App->renderer->camera.y -= speed;
 
 	if(App->input->GetKey(SDL_SCANCODE_LEFT) == KEY_REPEAT)
-		App->renderer->camera.x += speed;
-
+		if (camera.x <= 0) {
+			App->renderer->camera.x += speed;
+		}
 	if(App->input->GetKey(SDL_SCANCODE_RIGHT) == KEY_REPEAT)
-		App->renderer->camera.x -= speed;
-
+		if (camera.x >= -255) {
+			App->renderer->camera.x -= speed;
+		}
 	return UPDATE_CONTINUE;
 }
 
