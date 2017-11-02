@@ -34,10 +34,11 @@ public:
 	Animation forward;
 	Animation jump;
 	iPoint position;
+	iPoint referenceDrawPosition;
 	Animation *currentAnimation = nullptr;
 	
 	JumpSt jumpSt;
-	SDL_Rect *lastFrame = nullptr;
+	//SDL_Rect *lastFrame = nullptr;
 	
 	
 };

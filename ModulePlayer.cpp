@@ -12,6 +12,7 @@ ModulePlayer::ModulePlayer(bool start_enabled) : Module(start_enabled)
 	position.x = 120;
 	position.y = 120;
 
+
 	// idle animation (arcade sprite sheet)
 	idle.frames.push_back({7, 14, 60, 90});
 	idle.frames.push_back({95, 15, 60, 89});
@@ -65,7 +66,9 @@ bool ModulePlayer::Start()
 	graphics = App->textures->Load("ryu4.png"); // arcade version
 
 	App->renderer->Blit(graphics, position.x, position.y, (&currentAnimation->GetCurrentFrame()), 1.0f);
-	lastFrame = &currentAnimation->GetCurrentFrame();
+
+	referenceDrawPosition.x = position.x + currentAnimation->frames[currentAnimation->getPosCurrentFrame()].w / 2;
+	referenceDrawPosition.y = position.y + currentAnimation->frames[currentAnimation->getPosCurrentFrame()].h;
 	return true;
 }
 
@@ -82,23 +85,40 @@ bool ModulePlayer::CleanUp()
 // Update
 update_status ModulePlayer::Update()
 {
-	
-	//Para alternar entre las diferentes animaciones tomar como referencia el punto medio del "suelo" de la textura de ryu
-	//Utilizar getCurrentFrame para alternar entre una y otra animación(idle,palante,patras...)
-	// TODO 9: Draw the player with its animation
-	// make sure to detect player movement and change its
+	// TODO 9: Draw the player with its animation  make sure to detect player movement and change its
 	// position while cycling the animation(check Animation.h)
 
+	// First we check "special movement" as jump, bend, etc
+	if (jumpSt.jumping) {
+		referenceDrawPosition.y -= jumpSt.jumpingMove*jumpSt.jumpingOrientation;
+		// Player will ascend half way and descend the other half (if jump frames animation has a pair number of frames)
+		if (currentAnimation->getPosCurrentFrameFloat() + currentAnimation->speed > currentAnimation->frames.size() / 2 && jumpSt.jumpingOrientation>0) {
+			jumpSt.jumpingOrientation *= -1;
+		}
+ 		if (currentAnimation->getPosCurrentFrameFloat() + currentAnimation->speed >= currentAnimation->frames.size()) {
+			referenceDrawPosition.y -= jumpSt.jumpingMove*jumpSt.jumpingOrientation;
+			jumpSt.jumping = false;
+			jumpSt.jumpingOrientation *= -1;
+		}
+
+	}
+
+	// In any case we check if any key was pushed this frame and also apply horizontal move logical if thats the case, and we use its animation but when any special move is currently activated
 	if (App->input->GetKey(SDL_SCANCODE_LEFT) == KEY_REPEAT) {
 		if (position.x >= 1) {
-			position.x -= 1;
+			referenceDrawPosition.x -= 1;
 		}
-		currentAnimation = &backward;
+		if (!jumpSt.jumping) {
+			currentAnimation = &backward;
+		}
 	}else if(App->input->GetKey(SDL_SCANCODE_RIGHT) == KEY_REPEAT) {
 		if (position.x <= 450) {		
-			position.x += 1;
+			referenceDrawPosition.x += 1;
 		}
-		currentAnimation = &forward;
+		if (!jumpSt.jumping) {
+			currentAnimation = &forward;
+		}
+		
 	}
 	else if (App->input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN) {
 		jumpSt.jumping = true;
@@ -109,30 +129,16 @@ update_status ModulePlayer::Update()
 		currentAnimation = &idle;
 	}
 
-	if (jumpSt.jumping) {
-		position.y -= jumpSt.jumpingMove*jumpSt.jumpingOrientation;
-		if (position.y == 40){
-			jumpSt.jumpingOrientation *= -1;
-		}
-		if (position.y == 120) {
-			jumpSt.jumping = false;
-			jumpSt.jumpingOrientation *= -1;
-		}
-			
-	}
-	/*if (lastFrame != &currentAnimation->GetCurrentFrame()) {
-		if (currentAnimation->GetCurrentFrame().h > lastFrame->h) {
-			position.y -= (currentAnimation->GetCurrentFrame().h - lastFrame->h);
-		}
-		else if(currentAnimation->GetCurrentFrame().h < lastFrame->h){
-			position.y += (lastFrame->h - currentAnimation->GetCurrentFrame().h);
-		}
-	}*/
-	
-	App->renderer->Blit(graphics, position.x, position.y, (&currentAnimation->GetCurrentFrame()), 1.0f);
-	//lastFrame = &currentAnimation->GetCurrentFrame();
+	// We use this method only once before the animation drawing to apply the speed over the frames list just once per frame
+	currentAnimation->GetCurrentFrame();
 
 	
+	position.x = referenceDrawPosition.x - currentAnimation->frames[currentAnimation->getPosCurrentFrame()].w / 2;
+	position.y = referenceDrawPosition.y - currentAnimation->frames[currentAnimation->getPosCurrentFrame()].h;
+	
+   	App->renderer->Blit(graphics, position.x, position.y,&currentAnimation->frames[currentAnimation->getPosCurrentFrame()], 1.0f);
+	referenceDrawPosition.x = position.x + currentAnimation->frames[currentAnimation->getPosCurrentFrame()].w / 2;
+	referenceDrawPosition.y = position.y + currentAnimation->frames[currentAnimation->getPosCurrentFrame()].h;	
 
 	return UPDATE_CONTINUE;
 }

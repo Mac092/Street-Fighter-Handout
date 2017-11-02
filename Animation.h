@@ -27,4 +27,7 @@ public:
 	int getPosCurrentFrame() {
 		return (int)current_frame;
 	}
+	float getPosCurrentFrameFloat() {
+		return current_frame;
+	}
 };
